@@ -13,13 +13,15 @@ import numpy as np
 def compute_mse(y, tx, w):
     """MSE loss with the 0.5 factor to be consistent with lecture notes: 1/(2N) * ||y - tx w||^2."""
     e = y - tx @ w
-    return 0.5 * np.mean(e**2)
+    loss = 0.5 * np.mean(e**2)
+    return loss
 
 
 def compute_mse_gradient(y, tx, w):
     """Gradient of the MSE loss: -1/N * tx^T (y - tx w)."""
     e = y - tx @ w
-    return -tx.T @ e / len(y)
+    grad = -tx.T @ e / len(y)
+    return grad
 
 
 def sigmoid(z):
@@ -30,15 +32,20 @@ def sigmoid(z):
 def compute_logistic_loss(y, tx, w):
     """Mean logistic loss: 1/N * sum(log(1 + exp(tx w)) - y * tx w)."""
     z = tx @ w
-    return np.mean(
+
+    # logaddexp(0, z) is a numerically stable way to compute log(1 + exp(z)) , because exp(z) can be very large for large z, leading to overflow errors.
+    logistic_loss = np.mean(
         np.logaddexp(0, z) - y * z
-    )  # logaddexp(0, z) is a numerically stable way to compute log(1 + exp(z)) , because exp(z) can be very large for large z, leading to overflow errors.
+    ) 
+    
+    return logistic_loss 
 
 
 def compute_logistic_gradient(y, tx, w):
     """Gradient of the mean logistic loss: 1/N * tx^T (sigmoid(tx w) - y)."""
     z = tx @ w
-    return tx.T @ (sigmoid(z) - y) / len(y)
+    grad = tx.T @ (sigmoid(z) - y) / len(y)
+    return grad
 
 
 # The following are the Required functions :
@@ -56,11 +63,9 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         w:    the last weight vector, shape (D,).
         loss: the MSE loss at w.
     """
-    w = np.array(initial_w, dtype=float)
+    w = np.array(initial_w, dtype = float)
     for _ in range(max_iters):
-        w = w - gamma * compute_mse_gradient(
-            y, tx, w
-        )  # Full-batch gradient descent update step
+        w = w - gamma * compute_mse_gradient(y, tx, w)  # Full-batch gradient descent update step
     return w, compute_mse(y, tx, w)
 
 
@@ -76,12 +81,12 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
         w:    the last weight vector, shape (D,).
         loss: the MSE loss at w, computed on the full dataset.
     """
-    w = np.array(initial_w, dtype=float)
+    
+    w = np.array(initial_w, dtype = float)
     n = len(y)
     for _ in range(max_iters):
-        i = np.random.randint(
-            n
-        )  # pick a single random datapoint (Question: Should we use a random seed for reproducibility?)
+        np.random.seed(0)
+        i = np.random.randint(n)  # pick a single random datapoint (Question: Should we use a random seed for reproducibility?)
         grad = compute_mse_gradient(y[i : i + 1], tx[i : i + 1], w)
         w = w - gamma * grad
     return w, compute_mse(y, tx, w)
