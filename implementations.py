@@ -72,7 +72,6 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
 def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
     """Linear regression using stochastic gradient descent (batch size 1).
     Args:
-        y:         labels, shape (N,).
         tx:        data matrix, shape (N, D).
         initial_w: starting weight vector, shape (D,).
         max_iters: number of SGD steps; each step uses ONE random datapoint.
@@ -84,8 +83,8 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
     
     w = np.array(initial_w, dtype = float)
     n = len(y)
+    np.random.seed(0)
     for _ in range(max_iters):
-        np.random.seed(0)
         i = np.random.randint(n)  # pick a single random datapoint (Question: Should we use a random seed for reproducibility?)
         grad = compute_mse_gradient(y[i : i + 1], tx[i : i + 1], w)
         w = w - gamma * grad
